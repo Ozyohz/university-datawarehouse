@@ -1,0 +1,9 @@
+department_id,department_name,faculty,dean_name,established_year
+DEPT001,Computer Science,Faculty of Engineering,Prof. Nguyen Van Minh,1995
+DEPT002,Business Administration,Faculty of Business,Prof. Tran Thi Lan,1990
+DEPT003,General Education,Faculty of Arts and Sciences,Prof. Le Van Hung,1985
+DEPT004,Electrical Engineering,Faculty of Engineering,Prof. Pham Duc Tuan,1992
+DEPT005,Civil Engineering,Faculty of Engineering,Prof. Hoang Van Nam,1988
+DEPT006,Economics,Faculty of Business,Prof. Vu Thi Mai,1993
+DEPT007,Foreign Languages,Faculty of Arts and Sciences,Prof. Dang Van Thanh,1991
+DEPT008,Mathematics,Faculty of Arts and Sciences,Prof. Bui Thi Hoa,1987

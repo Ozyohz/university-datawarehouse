@@ -1,0 +1,21 @@
+course_id,course_name,course_description,credits,department_id,course_level,course_type,is_active
+CS101,Introduction to Programming,Basic programming concepts using Python,3,DEPT001,Undergraduate,Required,true
+CS102,Data Structures,Fundamental data structures and algorithms,3,DEPT001,Undergraduate,Required,true
+CS201,Database Systems,Relational database design and SQL,3,DEPT001,Undergraduate,Required,true
+CS202,Computer Networks,Network protocols and architecture,3,DEPT001,Undergraduate,Elective,true
+CS301,Software Engineering,Software development methodologies,3,DEPT001,Undergraduate,Required,true
+CS302,Machine Learning,Introduction to ML algorithms,3,DEPT001,Undergraduate,Elective,true
+CS401,Big Data Analytics,Large-scale data processing,3,DEPT001,Graduate,Elective,true
+CS402,Cloud Computing,Cloud infrastructure and services,3,DEPT001,Graduate,Elective,true
+BA101,Principles of Management,Introduction to management,3,DEPT002,Undergraduate,Required,true
+BA102,Marketing Fundamentals,Basic marketing concepts,3,DEPT002,Undergraduate,Required,true
+BA201,Financial Accounting,Accounting principles and practices,3,DEPT002,Undergraduate,Required,true
+BA202,Business Statistics,Statistical methods for business,3,DEPT002,Undergraduate,Required,true
+BA301,Strategic Management,Business strategy formulation,3,DEPT002,Undergraduate,Required,true
+BA302,Digital Marketing,Online marketing strategies,3,DEPT002,Undergraduate,Elective,true
+EN101,English Communication I,Basic English communication skills,2,DEPT003,Undergraduate,Required,true
+EN102,English Communication II,Intermediate English skills,2,DEPT003,Undergraduate,Required,true
+EN201,Business English,English for business contexts,2,DEPT003,Undergraduate,Elective,true
+MA101,Calculus I,Differential calculus,3,DEPT003,Undergraduate,Required,true
+MA102,Calculus II,Integral calculus,3,DEPT003,Undergraduate,Required,true
+MA201,Linear Algebra,Matrix algebra and applications,3,DEPT003,Undergraduate,Required,true

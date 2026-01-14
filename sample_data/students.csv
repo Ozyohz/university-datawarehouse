@@ -1,0 +1,21 @@
+student_id,first_name,last_name,date_of_birth,gender,email,phone,address,city,province,cohort_year,department_id,enrollment_date,status
+SV001,Nguyen,Van A,2002-05-15,Male,nguyenvana@university.edu,0901234567,123 Le Loi Street,Ha Noi,Ha Noi,2020,DEPT001,2020-09-01,Active
+SV002,Tran,Thi B,2001-08-22,Female,tranthib@university.edu,0912345678,456 Nguyen Hue Street,Ho Chi Minh,TP HCM,2019,DEPT002,2019-09-01,Graduated
+SV003,Le,Van C,2003-01-10,Male,levanc@university.edu,0923456789,789 Tran Hung Dao Street,Da Nang,Da Nang,2021,DEPT001,2021-09-01,Active
+SV004,Pham,Thi D,2002-11-03,Female,phamthid@university.edu,0934567890,321 Hai Ba Trung Street,Ha Noi,Ha Noi,2020,DEPT003,2020-09-01,Active
+SV005,Hoang,Van E,2000-07-28,Male,hoangvane@university.edu,0945678901,654 Le Thanh Ton Street,Ho Chi Minh,TP HCM,2018,DEPT002,2018-09-01,Graduated
+SV006,Vu,Thi F,2002-03-17,Female,vuthif@university.edu,0956789012,987 Nguyen Trai Street,Hai Phong,Hai Phong,2020,DEPT001,2020-09-01,Active
+SV007,Dang,Van G,2001-12-05,Male,dangvang@university.edu,0967890123,147 Phan Chu Trinh Street,Hue,Hue,2019,DEPT003,2019-09-01,Active
+SV008,Bui,Thi H,2003-04-20,Female,buithih@university.edu,0978901234,258 Le Duan Street,Da Nang,Da Nang,2021,DEPT002,2021-09-01,Active
+SV009,Do,Van I,2002-09-12,Male,dovani@university.edu,0989012345,369 Bach Dang Street,Ha Noi,Ha Noi,2020,DEPT001,2020-09-01,Active
+SV010,Ngo,Thi K,2001-06-30,Female,ngothik@university.edu,0990123456,741 Vo Van Tan Street,Ho Chi Minh,TP HCM,2019,DEPT003,2019-09-01,Graduated
+SV011,Dinh,Van L,2000-02-14,Male,dinhvanl@university.edu,0901234568,852 Nguyen Van Cu Street,Can Tho,Can Tho,2018,DEPT002,2018-09-01,Graduated
+SV012,Trinh,Thi M,2003-10-25,Female,trinhthim@university.edu,0912345679,963 Ly Tu Trong Street,Ha Noi,Ha Noi,2021,DEPT001,2021-09-01,Active
+SV013,Ly,Van N,2002-07-08,Male,lyvann@university.edu,0923456790,159 Tran Phu Street,Nha Trang,Khanh Hoa,2020,DEPT003,2020-09-01,Active
+SV014,Mac,Thi O,2001-11-18,Female,macthio@university.edu,0934567891,357 Le Hong Phong Street,Hai Phong,Hai Phong,2019,DEPT002,2019-09-01,Active
+SV015,Cao,Van P,2003-08-01,Male,caovanp@university.edu,0945678902,753 Nguyen An Ninh Street,Vung Tau,Ba Ria,2021,DEPT001,2021-09-01,Active
+SV016,Duong,Thi Q,2002-04-27,Female,duongthiq@university.edu,0956789013,951 Tran Quoc Toan Street,Ho Chi Minh,TP HCM,2020,DEPT003,2020-09-01,Dropped
+SV017,Ta,Van R,2001-01-09,Male,tavanr@university.edu,0967890124,246 Le Van Sy Street,Ho Chi Minh,TP HCM,2019,DEPT002,2019-09-01,Active
+SV018,Truong,Thi S,2000-05-23,Female,truongthis@university.edu,0978901235,468 Nguyen Dinh Chieu Street,Ha Noi,Ha Noi,2018,DEPT001,2018-09-01,Graduated
+SV019,Vo,Van T,2003-12-11,Male,vovant@university.edu,0989012346,680 Pham Ngu Lao Street,Da Nang,Da Nang,2021,DEPT003,2021-09-01,Active
+SV020,Ha,Thi U,2002-06-07,Female,hathiu@university.edu,0990123457,802 Nguyen Thai Hoc Street,Hue,Hue,2020,DEPT002,2020-09-01,Active

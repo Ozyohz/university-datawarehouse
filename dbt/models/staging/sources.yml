@@ -1,0 +1,65 @@
+version: 2
+
+sources:
+  - name: silver
+    description: "Silver layer - cleaned and validated data"
+    schema: silver
+    tables:
+      - name: stg_students
+        description: "Cleaned student data"
+        columns:
+          - name: student_id
+            description: "Unique student identifier"
+            tests:
+              - not_null
+              - unique
+          - name: email
+            tests:
+              - not_null
+          - name: status
+            tests:
+              - accepted_values:
+                  values: ['Active', 'Graduated', 'Dropped', 'Suspended', 'Unknown']
+                  
+      - name: stg_courses
+        description: "Cleaned course data"
+        columns:
+          - name: course_id
+            tests:
+              - not_null
+              - unique
+              
+      - name: stg_enrollments
+        description: "Cleaned enrollment data"
+        columns:
+          - name: enrollment_id
+            tests:
+              - not_null
+              - unique
+          - name: student_id
+            tests:
+              - not_null
+          - name: course_id
+            tests:
+              - not_null
+              
+      - name: stg_semesters
+        description: "Semester reference data"
+        
+      - name: stg_departments
+        description: "Department reference data"
+
+  - name: gold
+    description: "Gold layer - business ready data"
+    schema: gold
+    tables:
+      - name: dim_date
+        description: "Date dimension"
+      - name: dim_student
+        description: "Student dimension (SCD Type 2)"
+      - name: dim_course
+        description: "Course dimension"
+      - name: dim_department
+        description: "Department dimension"
+      - name: dim_semester
+        description: "Semester dimension"

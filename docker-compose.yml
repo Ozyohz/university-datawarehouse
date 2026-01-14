@@ -1,0 +1,392 @@
+# =============================================================================
+# University Data Warehouse - Docker Compose
+# =============================================================================
+
+x-airflow-common: &airflow-common
+  build:
+    context: ./infrastructure/docker/airflow
+    dockerfile: Dockerfile
+  environment: &airflow-common-env
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+    AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_DB_USER:-airflow}:${AIRFLOW_DB_PASSWORD:-airflow}@postgres:5432/${AIRFLOW_DB:-airflow}
+    AIRFLOW__CORE__FERNET_KEY: ${AIRFLOW__CORE__FERNET_KEY:-}
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW__WEBSERVER__SECRET_KEY:-secret}
+    AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    # Spark connection
+    SPARK_MASTER: ${SPARK_MASTER:-spark://spark-master:7077}
+    # MinIO connection
+    MINIO_ENDPOINT: ${MINIO_ENDPOINT:-minio:9000}
+    MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+    MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin123}
+    # PostgreSQL DW connection
+    DW_HOST: postgres
+    DW_PORT: 5432
+    DW_DATABASE: ${POSTGRES_DB:-university_dw}
+    DW_USER: ${POSTGRES_USER:-datawarehouse}
+    DW_PASSWORD: ${POSTGRES_PASSWORD:-datawarehouse}
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./spark_jobs:/opt/airflow/spark_jobs
+    - ./data_quality:/opt/airflow/data_quality
+    - airflow-logs:/opt/airflow/logs
+    - airflow-plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on: &airflow-common-depends-on
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+
+services:
+  # ===========================================================================
+  # PostgreSQL - Main Database
+  # ===========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: udw-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-datawarehouse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-datawarehouse}
+      POSTGRES_DB: ${POSTGRES_DB:-university_dw}
+      POSTGRES_MULTIPLE_DATABASES: airflow,metabase
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infrastructure/scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./infrastructure/scripts/create-multiple-dbs.sh:/docker-entrypoint-initdb.d/00-create-dbs.sh
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${POSTGRES_USER:-datawarehouse}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  # ===========================================================================
+  # Redis - Caching & Message Broker
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: udw-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  # ===========================================================================
+  # MinIO - S3-compatible Object Storage
+  # ===========================================================================
+  minio:
+    image: minio/minio:latest
+    container_name: udw-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  # MinIO bucket initialization
+  minio-init:
+    image: minio/mc:latest
+    container_name: udw-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c " mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin123}; mc mb myminio/bronze --ignore-existing; mc mb myminio/silver --ignore-existing; mc mb myminio/gold --ignore-existing; mc mb myminio/mlflow-artifacts --ignore-existing; mc mb myminio/spark-logs --ignore-existing; exit 0; "
+    networks:
+      - udw-network
+
+  # ===========================================================================
+  # Apache Spark - Distributed Processing
+  # ===========================================================================
+  spark-master:
+    build:
+      context: ./infrastructure/docker/spark
+      dockerfile: Dockerfile
+    container_name: udw-spark-master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_PORT=7077
+      - SPARK_MASTER_WEBUI_PORT=8080
+    ports:
+      - "7077:7077"
+      - "8081:8080"
+    volumes:
+      - ./spark_jobs:/opt/spark/jobs
+      - spark-logs:/opt/spark/logs
+    command: [ "/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master" ]
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  spark-worker-1:
+    build:
+      context: ./infrastructure/docker/spark
+      dockerfile: Dockerfile
+    container_name: udw-spark-worker-1
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=${SPARK_EXECUTOR_MEMORY:-4g}
+      - SPARK_WORKER_CORES=${SPARK_EXECUTOR_CORES:-2}
+    depends_on:
+      - spark-master
+    volumes:
+      - ./spark_jobs:/opt/spark/jobs
+      - spark-logs:/opt/spark/logs
+    command: [ "/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077" ]
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  spark-worker-2:
+    build:
+      context: ./infrastructure/docker/spark
+      dockerfile: Dockerfile
+    container_name: udw-spark-worker-2
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_MEMORY=${SPARK_EXECUTOR_MEMORY:-4g}
+      - SPARK_WORKER_CORES=${SPARK_EXECUTOR_CORES:-2}
+    depends_on:
+      - spark-master
+    volumes:
+      - ./spark_jobs:/opt/spark/jobs
+      - spark-logs:/opt/spark/logs
+    command: [ "/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker", "spark://spark-master:7077" ]
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  # ===========================================================================
+  # Apache Airflow - Workflow Orchestration
+  # ===========================================================================
+  airflow-init:
+    <<: *airflow-common
+    container_name: udw-airflow-init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db init
+        airflow users create \
+          --username ${AIRFLOW_ADMIN_USER:-admin} \
+          --password ${AIRFLOW_ADMIN_PASSWORD:-admin} \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email ${AIRFLOW_ADMIN_EMAIL:-admin@localhost}
+    environment:
+      <<: *airflow-common-env
+    restart: on-failure
+    networks:
+      - udw-network
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: udw-airflow-webserver
+    command: webserver
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:8080/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - udw-network
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: udw-airflow-scheduler
+    command: scheduler
+    healthcheck:
+      test: [ "CMD", "curl", "--fail", "http://localhost:8974/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: unless-stopped
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+    networks:
+      - udw-network
+
+  # ===========================================================================
+  # Apache Superset - BI & Visualization
+  # ===========================================================================
+  superset:
+    build:
+      context: ./infrastructure/docker/superset
+      dockerfile: Dockerfile
+    container_name: udw-superset
+    environment:
+      - SUPERSET_SECRET_KEY=${SUPERSET_SECRET_KEY:-supersecretkey}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-datawarehouse}:${POSTGRES_PASSWORD:-datawarehouse}@postgres:5432/${POSTGRES_DB:-university_dw}
+    ports:
+      - "8088:8088"
+    volumes:
+      - superset-data:/app/superset_home
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  # ===========================================================================
+  # MLflow - ML Platform
+  # ===========================================================================
+  mlflow:
+    build:
+      context: ./infrastructure/docker/mlflow
+      dockerfile: Dockerfile
+    container_name: udw-mlflow
+    environment:
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY:-minioadmin}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY:-minioadmin123}
+    command: >
+      mlflow server --backend-store-uri postgresql://${POSTGRES_USER:-datawarehouse}:${POSTGRES_PASSWORD:-datawarehouse}@postgres:5432/mlflow --default-artifact-root s3://mlflow-artifacts --host 0.0.0.0 --port 5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  # ===========================================================================
+  # Metabase - Alternative BI Tool
+  # ===========================================================================
+  metabase:
+    image: metabase/metabase:latest
+    container_name: udw-metabase
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: metabase
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER:-datawarehouse}
+      MB_DB_PASS: ${POSTGRES_PASSWORD:-datawarehouse}
+      MB_DB_HOST: postgres
+    ports:
+      - "3001:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  # ===========================================================================
+  # Monitoring - Prometheus & Grafana
+  # ===========================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: udw-prometheus
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: udw-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+  # ===========================================================================
+  # Jupyter - Notebooks for Development
+  # ===========================================================================
+  jupyter:
+    build:
+      context: ./infrastructure/docker/jupyter
+      dockerfile: Dockerfile
+    container_name: udw-jupyter
+    environment:
+      - JUPYTER_TOKEN=jupyter
+    volumes:
+      - ./ml/notebooks:/home/jovyan/notebooks
+      - ./spark_jobs:/home/jovyan/spark_jobs
+      - ./dbt:/home/jovyan/dbt
+    ports:
+      - "8888:8888"
+    restart: unless-stopped
+    networks:
+      - udw-network
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  postgres-data:
+  redis-data:
+  minio-data:
+  airflow-logs:
+  airflow-plugins:
+  spark-logs:
+  superset-data:
+  prometheus-data:
+  grafana-data:
+
+    # =============================================================================
+    # Networks
+    # =============================================================================
+networks:
+  udw-network:
+    driver: bridge
+    name: udw-network

@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Environment
+.env
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+logs/
+*.log
+
+# Docker
+.docker/
+
+# Airflow
+airflow-logs/
+airflow-plugins/
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# Great Expectations
+data_quality/great_expectations/uncommitted/
+data_quality/great_expectations/plugins/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Data (don't commit actual data)
+data/
+*.parquet
+*.delta/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backups
+backups/
+*.bak
+
+# Temporary
+tmp/
+temp/
+*.tmp

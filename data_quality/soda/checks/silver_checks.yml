@@ -1,0 +1,89 @@
+# Soda Data Quality Checks for Silver Layer
+# =============================================================================
+
+# Students checks
+checks for silver.stg_students:
+  # Row count
+  - row_count between 100 and 1000000
+  
+  # Freshness
+  - freshness(updated_at) < 2d
+  
+  # Uniqueness
+  - duplicate_count(student_id) = 0
+  
+  # Completeness
+  - missing_count(student_id) = 0
+  - missing_count(full_name) = 0
+  - missing_count(email) = 0
+  - missing_percent(date_of_birth) < 5
+  - missing_percent(phone) < 20
+  
+  # Validity
+  - invalid_count(email) = 0:
+      valid regex: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+  
+  - invalid_percent(status) < 1:
+      valid values: ['Active', 'Graduated', 'Dropped', 'Suspended', 'Unknown']
+  
+  - invalid_percent(gender) < 1:
+      valid values: ['Male', 'Female', 'Other']
+  
+  # Range checks
+  - min(cohort_year) >= 2000
+  - max(cohort_year) <= 2030
+  
+  # Data quality score
+  - failed rows percent < 5:
+      fail condition: is_valid = false
+
+# Enrollments checks
+checks for silver.stg_enrollments:
+  # Row count
+  - row_count > 0
+  
+  # Freshness
+  - freshness(updated_at) < 2d
+  
+  # Uniqueness
+  - duplicate_count(enrollment_id) = 0
+  
+  # Completeness
+  - missing_count(enrollment_id) = 0
+  - missing_count(student_id) = 0
+  - missing_count(course_id) = 0
+  - missing_count(semester_id) = 0
+  
+  # Score validations
+  - min(midterm_score) >= 0
+  - max(midterm_score) <= 10
+  - min(final_score) >= 0
+  - max(final_score) <= 10
+  - min(total_score) >= 0
+  - max(total_score) <= 10
+  
+  # Grade letter validation
+  - invalid_percent(grade_letter) < 1:
+      valid values: ['A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F', null]
+  
+  # GPA validation
+  - min(gpa_points) >= 0
+  - max(gpa_points) <= 4.0
+  
+  # Attendance validation
+  - min(attendance_count) >= 0
+  - min(absence_count) >= 0
+  - avg(attendance_rate) between 0 and 100
+
+# Courses checks
+checks for silver.stg_courses:
+  # Uniqueness
+  - duplicate_count(course_id) = 0
+  
+  # Completeness
+  - missing_count(course_id) = 0
+  - missing_count(course_name) = 0
+  
+  # Credits validation
+  - min(credits) >= 1
+  - max(credits) <= 10

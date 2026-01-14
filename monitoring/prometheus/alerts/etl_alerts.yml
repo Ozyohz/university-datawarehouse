@@ -1,0 +1,175 @@
+# ETL Pipeline Alerts
+# =============================================================================
+
+groups:
+  - name: etl_alerts
+    rules:
+      # DAG Failure Alert
+      - alert: AirflowDAGFailed
+        expr: airflow_dag_run_duration_failed > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Airflow DAG {{ $labels.dag_id }} failed"
+          description: "DAG {{ $labels.dag_id }} has failed on {{ $labels.instance }}"
+
+      # Long Running DAG
+      - alert: AirflowDAGLongRunning
+        expr: airflow_dag_run_duration > 7200
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Airflow DAG {{ $labels.dag_id }} running too long"
+          description: "DAG {{ $labels.dag_id }} has been running for more than 2 hours"
+
+      # Task Queue Backlog
+      - alert: AirflowTaskQueueBacklog
+        expr: airflow_executor_queued_tasks > 100
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Airflow task queue backlog"
+          description: "More than 100 tasks queued for over 15 minutes"
+
+  - name: database_alerts
+    rules:
+      # PostgreSQL Down
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL instance {{ $labels.instance }} is down"
+
+      # High Connection Usage
+      - alert: PostgreSQLHighConnections
+        expr: pg_stat_activity_count / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL high connection usage"
+          description: "PostgreSQL connection usage is above 80%"
+
+      # Slow Queries
+      - alert: PostgreSQLSlowQueries
+        expr: rate(pg_stat_statements_seconds_total[5m]) > 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL slow queries detected"
+          description: "Average query time is above 10 seconds"
+
+      # Database Size Growth
+      - alert: PostgreSQLDatabaseSizeGrowth
+        expr: deriv(pg_database_size_bytes[1h]) > 100000000
+        for: 1h
+        labels:
+          severity: info
+        annotations:
+          summary: "Database growing rapidly"
+          description: "Database {{ $labels.datname }} growing more than 100MB/hour"
+
+  - name: storage_alerts
+    rules:
+      # MinIO Disk Usage
+      - alert: MinIODiskUsageHigh
+        expr: minio_disk_storage_used_bytes / minio_disk_storage_total_bytes > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MinIO disk usage high"
+          description: "MinIO disk usage is above 85%"
+
+      # MinIO Offline
+      - alert: MinIOOffline
+        expr: minio_cluster_nodes_offline_total > 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MinIO node offline"
+          description: "One or more MinIO nodes are offline"
+
+  - name: spark_alerts
+    rules:
+      # Spark Job Failed
+      - alert: SparkJobFailed
+        expr: spark_job_result == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Spark job failed"
+          description: "Spark job {{ $labels.job_name }} has failed"
+
+      # Spark Executor Memory
+      - alert: SparkExecutorMemoryHigh
+        expr: spark_executor_memory_used_mb / spark_executor_memory_max_mb > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Spark executor memory high"
+          description: "Spark executor memory usage is above 90%"
+
+  - name: data_quality_alerts
+    rules:
+      # Data Quality Check Failed
+      - alert: DataQualityCheckFailed
+        expr: data_quality_check_passed == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Data quality check failed"
+          description: "Data quality check {{ $labels.check_name }} failed on {{ $labels.table_name }}"
+
+      # Data Freshness
+      - alert: DataNotFresh
+        expr: (time() - data_last_updated_timestamp) > 86400
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Data not fresh"
+          description: "Table {{ $labels.table_name }} has not been updated in 24 hours"
+
+  - name: system_alerts
+    rules:
+      # High CPU Usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is above 80% on {{ $labels.instance }}"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is above 85% on {{ $labels.instance }}"
+
+      # Disk Space Low
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{fstype!~"tmpfs|fuse.lxcfs"} / node_filesystem_size_bytes{fstype!~"tmpfs|fuse.lxcfs"}) * 100 < 15
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space low"
+          description: "Disk space is below 15% on {{ $labels.instance }} ({{ $labels.mountpoint }})"

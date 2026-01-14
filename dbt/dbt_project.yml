@@ -1,0 +1,59 @@
+name: 'university_datawarehouse'
+version: '1.0.0'
+config-version: 2
+
+profile: 'university_dw'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+vars:
+  # Date range for incremental models
+  start_date: '2020-01-01'
+  
+  # Business logic thresholds
+  passing_score: 5.0
+  high_gpa_threshold: 3.5
+  at_risk_attendance_rate: 0.7
+
+models:
+  university_datawarehouse:
+    # Staging models (Silver layer)
+    staging:
+      +materialized: view
+      +schema: silver
+      
+    # Intermediate models  
+    intermediate:
+      +materialized: ephemeral
+      
+    # Marts/Gold layer
+    marts:
+      +materialized: table
+      +schema: gold
+      
+      dimensions:
+        +materialized: table
+        
+      facts:
+        +materialized: incremental
+        +incremental_strategy: merge
+        +unique_key: 'enrollment_id'
+        
+      aggregations:
+        +materialized: table
+
+tests:
+  +severity: warn
+
+seeds:
+  +schema: staging

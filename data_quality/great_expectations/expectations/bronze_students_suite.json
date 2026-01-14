@@ -1,0 +1,107 @@
+{
+    "data_asset_type": null,
+    "expectation_suite_name": "bronze_students_suite",
+    "expectations": [
+        {
+            "expectation_type": "expect_table_row_count_to_be_between",
+            "kwargs": {
+                "min_value": 1,
+                "max_value": 1000000
+            },
+            "meta": {
+                "notes": "Table should have at least 1 row and at most 1 million rows"
+            }
+        },
+        {
+            "expectation_type": "expect_column_to_exist",
+            "kwargs": {
+                "column": "student_id"
+            },
+            "meta": {}
+        },
+        {
+            "expectation_type": "expect_column_to_exist",
+            "kwargs": {
+                "column": "first_name"
+            },
+            "meta": {}
+        },
+        {
+            "expectation_type": "expect_column_to_exist",
+            "kwargs": {
+                "column": "last_name"
+            },
+            "meta": {}
+        },
+        {
+            "expectation_type": "expect_column_to_exist",
+            "kwargs": {
+                "column": "email"
+            },
+            "meta": {}
+        },
+        {
+            "expectation_type": "expect_column_values_to_not_be_null",
+            "kwargs": {
+                "column": "student_id"
+            },
+            "meta": {
+                "notes": "Student ID should never be null"
+            }
+        },
+        {
+            "expectation_type": "expect_column_values_to_be_unique",
+            "kwargs": {
+                "column": "student_id"
+            },
+            "meta": {
+                "notes": "Student ID should be unique within the batch"
+            }
+        },
+        {
+            "expectation_type": "expect_column_values_to_match_regex",
+            "kwargs": {
+                "column": "email",
+                "regex": "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+                "mostly": 0.95
+            },
+            "meta": {
+                "notes": "95% of emails should match valid format"
+            }
+        },
+        {
+            "expectation_type": "expect_column_values_to_be_in_set",
+            "kwargs": {
+                "column": "gender",
+                "value_set": [
+                    "M",
+                    "F",
+                    "Male",
+                    "Female",
+                    "NAM",
+                    "NỮ",
+                    "NU",
+                    "Other",
+                    null
+                ],
+                "mostly": 0.99
+            },
+            "meta": {}
+        },
+        {
+            "expectation_type": "expect_column_values_to_be_between",
+            "kwargs": {
+                "column": "cohort_year",
+                "min_value": 2000,
+                "max_value": 2030,
+                "mostly": 0.99
+            },
+            "meta": {}
+        }
+    ],
+    "ge_cloud_id": null,
+    "meta": {
+        "great_expectations_version": "0.18.0",
+        "notes": "Data quality expectations for bronze.raw_students table"
+    }
+}
