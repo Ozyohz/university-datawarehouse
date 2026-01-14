@@ -50,6 +50,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-datawarehouse}
       POSTGRES_DB: ${POSTGRES_DB:-university_dw}
       POSTGRES_MULTIPLE_DATABASES: airflow,metabase
+      AIRFLOW_DB_USER: ${AIRFLOW_DB_USER:-airflow}
+      AIRFLOW_DB_PASSWORD: ${AIRFLOW_DB_PASSWORD:-airflow}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./infrastructure/scripts/init-db.sql:/docker-entrypoint-initdb.d/01-init.sql

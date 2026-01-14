@@ -4,6 +4,7 @@ University Data Warehouse - Main ETL Pipeline DAG
 This DAG orchestrates the full ETL pipeline from Bronze to Gold layer.
 """
 
+import os
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -57,9 +58,16 @@ with DAG(
             application='/opt/airflow/spark_jobs/bronze/ingest_students.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
             conf={
                 'spark.sql.extensions': 'io.delta.sql.DeltaSparkSessionExtension',
                 'spark.sql.catalog.spark_catalog': 'org.apache.spark.sql.delta.catalog.DeltaCatalog',
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
             },
         )
 
@@ -68,6 +76,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/bronze/ingest_courses.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         ingest_enrollments = SparkSubmitOperator(
@@ -75,6 +92,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/bronze/ingest_enrollments.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         ingest_tuition = SparkSubmitOperator(
@@ -82,6 +108,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/bronze/ingest_tuition.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         ingest_semesters = SparkSubmitOperator(
@@ -89,6 +124,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/bronze/ingest_semesters.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         ingest_departments = SparkSubmitOperator(
@@ -96,6 +140,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/bronze/ingest_departments.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         [ingest_students, ingest_courses, ingest_enrollments, 
@@ -119,6 +172,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/silver/transform_students.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         transform_courses = SparkSubmitOperator(
@@ -126,6 +188,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/silver/transform_courses.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         transform_enrollments = SparkSubmitOperator(
@@ -133,6 +204,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/silver/transform_enrollments.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         transform_tuition = SparkSubmitOperator(
@@ -140,6 +220,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/silver/transform_tuition.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         [transform_students, transform_courses, transform_enrollments, transform_tuition]
@@ -163,6 +252,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/gold/build_dim_department.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         build_dim_semester = SparkSubmitOperator(
@@ -170,6 +268,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/gold/build_dim_semester.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         build_dim_course = SparkSubmitOperator(
@@ -177,6 +284,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/gold/build_dim_course.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         build_dim_student = SparkSubmitOperator(
@@ -184,6 +300,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/gold/build_dim_student.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         # Build Facts (depends on dimensions)
@@ -192,6 +317,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/gold/build_fact_enrollment.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         build_fact_tuition = SparkSubmitOperator(
@@ -199,6 +333,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/gold/build_fact_tuition.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         # Build Aggregations
@@ -207,6 +350,15 @@ with DAG(
             application='/opt/airflow/spark_jobs/gold/build_aggregations.py',
             conn_id='spark_default',
             verbose=True,
+            packages='io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.1',
+            conf={
+                'spark.hadoop.fs.s3a.endpoint': f"http://{os.getenv('MINIO_ENDPOINT', 'minio:9000')}",
+                'spark.hadoop.fs.s3a.access.key': os.getenv('MINIO_ACCESS_KEY', 'minioadmin'),
+                'spark.hadoop.fs.s3a.secret.key': os.getenv('MINIO_SECRET_KEY', 'minioadmin123'),
+                'spark.hadoop.fs.s3a.path.style.access': 'true',
+                'spark.hadoop.fs.s3a.impl': 'org.apache.hadoop.fs.s3a.S3AFileSystem',
+                'spark.hadoop.fs.s3a.connection.ssl.enabled': 'false',
+            },
         )
 
         # Dependencies within gold layer

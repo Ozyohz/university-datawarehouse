@@ -1,0 +1,6 @@
+transaction_id,student_id,semester_id,tuition_amount,scholarship_amount,discount_amount,paid_amount,payment_date,payment_method,status
+TXN001,SV001,SEM2020F,5000.00,1000.00,0.00,4000.00,2020-08-15,Bank Transfer,Paid
+TXN002,SV002,SEM2020F,5000.00,0.00,500.00,4500.00,2020-08-16,Credit Card,Paid
+TXN003,SV003,SEM2020F,5000.00,2500.00,0.00,2500.00,2020-08-17,Cash,Paid
+TXN004,SV001,SEM2021S,5200.00,1000.00,0.00,4200.00,2021-01-20,Bank Transfer,Paid
+TXN005,SV002,SEM2021S,5200.00,0.00,520.00,4680.00,2021-01-21,Credit Card,Paid

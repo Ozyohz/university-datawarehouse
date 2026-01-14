@@ -1,58 +1,45 @@
 """
-Bronze Layer - Student Data Ingestion
-======================================
-Ingests student data from source systems into the bronze layer.
+Bronze Layer - Enrollment Data Ingestion
+=========================================
+Ingests enrollment data from source systems into the bronze layer.
 """
 
 import os
 from datetime import datetime
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
-    col, lit, current_timestamp, input_file_name,
-    to_date, trim, upper, lower, regexp_replace
+    col, lit, current_timestamp, input_file_name, to_date
 )
 from pyspark.sql.types import (
-    StructType, StructField, StringType, IntegerType, DateType
+    StructType, StructField, StringType, IntegerType, DecimalType, DateType
 )
 
 
 def create_spark_session():
     """Create and configure Spark session"""
     return SparkSession.builder \
-        .appName("Bronze - Ingest Students") \
+        .appName("Bronze - Ingest Enrollments") \
         .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension") \
         .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog") \
         .getOrCreate()
 
 
 def get_source_schema():
-    """Define the expected schema for student data"""
+    """Define the expected schema for enrollment data"""
     return StructType([
+        StructField("enrollment_id", StringType(), True),
         StructField("student_id", StringType(), True),
-        StructField("first_name", StringType(), True),
-        StructField("last_name", StringType(), True),
-        StructField("date_of_birth", StringType(), True),
-        StructField("gender", StringType(), True),
-        StructField("email", StringType(), True),
-        StructField("phone", StringType(), True),
-        StructField("address", StringType(), True),
-        StructField("city", StringType(), True),
-        StructField("province", StringType(), True),
-        StructField("cohort_year", IntegerType(), True),
-        StructField("department_id", StringType(), True),
+        StructField("course_id", StringType(), True),
+        StructField("semester_id", StringType(), True),
         StructField("enrollment_date", StringType(), True),
+        StructField("midterm_score", DecimalType(5, 2), True),
+        StructField("final_score", DecimalType(5, 2), True),
+        StructField("total_score", DecimalType(5, 2), True),
+        StructField("grade_letter", StringType(), True),
         StructField("status", StringType(), True),
+        StructField("attendance_count", IntegerType(), True),
+        StructField("absence_count", IntegerType(), True),
     ])
-
-
-def ingest_from_database(spark, jdbc_url, table_name, properties):
-    """Ingest data from source database"""
-    df = spark.read.jdbc(
-        url=jdbc_url,
-        table=table_name,
-        properties=properties
-    )
-    return df
 
 
 def ingest_from_files(spark, source_path, file_format="csv"):
@@ -65,12 +52,6 @@ def ingest_from_files(spark, source_path, file_format="csv"):
             .option("inferSchema", "false") \
             .schema(schema) \
             .csv(source_path)
-    elif file_format == "json":
-        df = spark.read \
-            .schema(schema) \
-            .json(source_path)
-    elif file_format == "parquet":
-        df = spark.read.parquet(source_path)
     else:
         raise ValueError(f"Unsupported file format: {file_format}")
     
@@ -96,7 +77,11 @@ def write_to_bronze(df, target_path, mode="append"):
 
 def write_to_postgres(df, jdbc_url, table_name, properties, mode="append"):
     """Write data to PostgreSQL bronze table"""
-    df.write \
+    # Cast date columns explicitly for PostgreSQL
+    df_to_write = df \
+        .withColumn("enrollment_date", to_date(col("enrollment_date")))
+    
+    df_to_write.write \
         .jdbc(
             url=jdbc_url,
             table=table_name,
@@ -111,8 +96,8 @@ def main():
     batch_id = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     # MinIO/S3 paths
-    source_path = os.getenv("SOURCE_PATH", "s3a://raw-data/students/")
-    bronze_path = os.getenv("BRONZE_PATH", "s3a://bronze/students/")
+    source_path = os.getenv("SOURCE_PATH", "s3a://raw-data/enrollments/")
+    bronze_path = os.getenv("BRONZE_PATH", "s3a://bronze/enrollments/")
     
     # PostgreSQL configuration
     pg_host = os.getenv("DW_HOST", "postgres")
@@ -132,14 +117,13 @@ def main():
     spark = create_spark_session()
     
     try:
-        print(f"Starting student ingestion - Batch ID: {batch_id}")
+        print(f"Starting enrollment ingestion - Batch ID: {batch_id}")
         
-        # Read from source (file-based for this example)
+        # Read from source
         df = ingest_from_files(spark, source_path, file_format="csv")
         
-        # Add metadata columns
+        # Add metadata columns and cast dates for Delta Lake too
         df_with_metadata = add_metadata_columns(df, batch_id) \
-            .withColumn("date_of_birth", to_date(col("date_of_birth"))) \
             .withColumn("enrollment_date", to_date(col("enrollment_date")))
         
         # Count records
@@ -151,15 +135,15 @@ def main():
         write_to_bronze(df_with_metadata, bronze_path)
         
         # Also write to PostgreSQL bronze table
-        print("Writing to PostgreSQL bronze.raw_students")
+        print("Writing to PostgreSQL bronze.raw_enrollments")
         write_to_postgres(
             df_with_metadata, 
             jdbc_url, 
-            "bronze.raw_students", 
+            "bronze.raw_enrollments", 
             properties
         )
         
-        print(f"Successfully ingested {record_count} student records")
+        print(f"Successfully ingested {record_count} enrollment records")
         
     except Exception as e:
         print(f"Error during ingestion: {str(e)}")

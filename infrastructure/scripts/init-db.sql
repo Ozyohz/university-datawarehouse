@@ -201,6 +201,60 @@ CREATE TABLE IF NOT EXISTS silver.stg_enrollments (
     validation_errors TEXT[]
 );
 
+-- Cleaned Departments
+CREATE TABLE IF NOT EXISTS silver.stg_departments (
+    department_key SERIAL PRIMARY KEY,
+    department_id VARCHAR(50) NOT NULL UNIQUE,
+    department_name VARCHAR(200),
+    faculty VARCHAR(200),
+    dean_name VARCHAR(100),
+    established_year INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_valid BOOLEAN DEFAULT TRUE,
+    validation_errors TEXT[]
+);
+
+-- Cleaned Semesters
+CREATE TABLE IF NOT EXISTS silver.stg_semesters (
+    semester_key SERIAL PRIMARY KEY,
+    semester_id VARCHAR(50) NOT NULL UNIQUE,
+    semester_name VARCHAR(100),
+    academic_year INTEGER,
+    semester_number INTEGER,
+    start_date DATE,
+    end_date DATE,
+    is_current BOOLEAN,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_valid BOOLEAN DEFAULT TRUE,
+    validation_errors TEXT[]
+);
+
+-- Cleaned Tuition
+CREATE TABLE IF NOT EXISTS silver.stg_tuition (
+    tuition_key SERIAL PRIMARY KEY,
+    transaction_id VARCHAR(50) NOT NULL UNIQUE,
+    student_id VARCHAR(50),
+    semester_id VARCHAR(50),
+    tuition_amount DECIMAL(15,2),
+    scholarship_amount DECIMAL(15,2),
+    discount_amount DECIMAL(15,2),
+    total_discount DECIMAL(15,2),
+    net_amount DECIMAL(15,2),
+    paid_amount DECIMAL(15,2),
+    balance_amount DECIMAL(15,2),
+    payment_date DATE,
+    payment_method VARCHAR(50),
+    payment_ratio DECIMAL(5,2),
+    status VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_valid BOOLEAN DEFAULT TRUE,
+    validation_errors TEXT[]
+);
+
+
 -- =============================================================================
 -- GOLD LAYER - Business-Ready Dimension and Fact Tables
 -- =============================================================================

@@ -20,7 +20,8 @@ USER airflow
 
 # Install Python packages
 COPY requirements.txt /tmp/requirements.txt
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+RUN pip install --no-cache-dir dbt-core dbt-postgres && \
+    pip install --no-cache-dir -r /tmp/requirements.txt --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.8.1/constraints-3.11.txt"
 
 # Set environment variables
 ENV AIRFLOW__CORE__LOAD_EXAMPLES=False

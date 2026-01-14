@@ -64,3 +64,4 @@ backups/
 tmp/
 temp/
 *.tmp
+build_log.txt
