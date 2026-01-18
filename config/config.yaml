@@ -1,0 +1,25 @@
+# University Data Warehouse Configuration
+
+storage:
+  bronze_path: "s3a://bronze/"
+  silver_path: "s3a://silver/"
+  gold_path: "s3a://gold/"
+
+tables:
+  students:
+    bronze: "bronze.raw_students"
+    silver: "silver.stg_students"
+    gold: "gold.dim_student"
+    keys: ["student_id"]
+  
+  departments:
+    bronze: "bronze.raw_departments"
+    silver: "silver.stg_departments"
+    gold: "gold.dim_department"
+    keys: ["department_id"]
+
+dwh_connection:
+  host: ${DW_HOST:-postgres}
+  port: ${DW_PORT:-5432}
+  database: ${DW_DATABASE:-university_dw}
+  user: ${DW_USER:-datawarehouse}

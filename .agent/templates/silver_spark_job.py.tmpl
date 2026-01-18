@@ -1,0 +1,37 @@
+"""
+Silver Layer - [Entity Name] Transformation
+==========================================
+Template for new Spark jobs.
+Replace [Entity Name] with your business entity.
+"""
+
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from common.spark_utils import (
+    get_spark_session, read_postgres_table, write_postgres_table,
+    clean_strings, normalize_email
+)
+from pyspark.sql.functions import col, current_timestamp, to_date
+
+def main():
+    spark = get_spark_session("Silver - [Entity Name]")
+    
+    try:
+        # 1. Read
+        df = read_postgres_table(spark, "bronze.raw_[entity_name]")
+        
+        # 2. Transform (Apply your logic here)
+        df_silver = df \
+            .transform(normalize_email) \
+            # .transform(...)
+            
+        # 3. Write
+        write_postgres_table(df_silver, "silver.stg_[entity_name]")
+        
+    finally:
+        spark.stop()
+
+if __name__ == "__main__":
+    main()
